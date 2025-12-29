@@ -5371,6 +5371,7 @@ try {
     btn.disabled = true;
     btn.textContent = '登录中...';
     
+    
     try {
       await AuthManager.login(email, password);
     } catch (err) {
@@ -5388,10 +5389,17 @@ try {
     const email = document.getElementById('registerEmail').value;
     const password = document.getElementById('registerPassword').value;
     const name = document.getElementById('registerName').value;
-    const inviteCode = document.getElementById('registerInviteCode').value;
+    const inviteCode = document.getElementById('registerInviteCode').value.trim().toUpperCase();
     
     btn.disabled = true;
     btn.textContent = '注册中...';
+    
+if (!inviteCode) {
+  AuthManager.showError('邀请码必填：请填写老师给你的邀请码（比如 CONRAD2025）');
+  btn.disabled = false;
+  btn.textContent = '注册';
+  return;
+}
     
     try {
       await AuthManager.register(email, password, name, inviteCode);
