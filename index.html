@@ -5231,28 +5231,35 @@ const AuthManager = {
       teacherId = teacher.id;
     }
     
-    // 注册用户
-    const { data, error } = await supabaseClient.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { name, teacher_id: teacherId }
-      }
-    });
-    
-    if (error) throw error;
-    
-    // 如果注册成功且有邀请码，更新profiles表绑定老师
-    if (data.user && teacherId) {
-      setTimeout(async () => {
-        await supabaseClient
-          .from('profiles')
-          .update({ teacher_id: teacherId })
-          .eq('id', data.user.id);
-      }, 1000);
+    // 注册用户（严格邀请码版）
+try {
+  const cleanInvite = (inviteCode || '').trim().toUpperCase();
+
+  const { data, error } = await supabaseClient.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { name, invite_code: cleanInvite } // ✅ 关键：传邀请码给 trigger
     }
-    
-    return data;
+  });
+
+  if (error) throw error;
+
+  return data;
+
+} catch (err) {
+  const msg = String(err?.message || err);
+
+  if (msg.includes('INVITE_CODE_REQUIRED')) {
+    alert('邀请码必填：请填写老师给你的邀请码（比如 CONRAD2025）');
+  } else if (msg.includes('INVITE_CODE_INVALID')) {
+    alert('邀请码不正确：请检查大小写/空格，或联系老师确认邀请码');
+  } else {
+    alert('注册失败：' + msg);
+  }
+
+  return null;
+}
   },
   
   // 退出登录
